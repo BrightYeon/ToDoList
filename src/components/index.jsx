@@ -6,7 +6,20 @@ import "react-calendar/dist/Calendar.css";
 
 export default function Main() {
   const day = new Date();
-  const [value, onChange] = useState(new Date());
+  const [setValue, onChange] = useState(new Date());
+  let i = 0;
+
+  const onClick = () => {};
+
+  const a = (text) => {
+    const dateID = setValue.getDate();
+    localStorage.setItem(dateID + "-" + i, text);
+  };
+
+  const input = (event) => {
+    a(event.target.value);
+  };
+
   return (
     <Container>
       <Wrapper>
@@ -17,10 +30,14 @@ export default function Main() {
             {day.getFullYear()}년 {day.getMonth() + 1}월 {day.getDate()}일
           </Today>
         </Header>
-        <Calendar onChange={onChange} value={value} />
+        <Calendar onChange={onChange} value={setValue} />
       </Wrapper>
       <ToDo>
-        <WriteToDo placeholder="할 일을 입력하세요"></WriteToDo>
+        <WriteToDo
+          placeholder="할 일을 입력하세요"
+          onChange={input}
+        ></WriteToDo>
+        <ToDoBtn onClick={onClick}></ToDoBtn>
       </ToDo>
     </Container>
   );
@@ -48,11 +65,15 @@ const Today = styled.h4`
 `;
 const ToDo = styled.div`
   width: 50%;
+  padding: 21.28px 0px;
 `;
 const WriteToDo = styled.input`
-  margin: 21.28px 0px;
   width: 250px;
   height: 40px;
   border: 0px;
   border-radius: 10px;
+`;
+const ToDoBtn = styled.button`
+  width: 30px;
+  height: 60px;
 `;
