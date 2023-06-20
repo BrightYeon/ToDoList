@@ -1,96 +1,156 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+import Header from "./header";
 
 export default function Main() {
-  const day = new Date();
-  const [setValue, onChange] = useState(new Date());
-  const ToDos = [];
-
-  let text = "";
+  const [value, setValue] = useState(new Date());
+  const [ToDos, setToDos] = useState([]);
+  const [text, setText] = useState("");
+  const [count, setCount] = useState();
 
   const onChangeInput = (event) => {
-    text = event.target.value;
+    setText(event.target.value);
   };
 
-  const onClick = () => {
-    a(text);
-    console.log(text);
-  };
+  function onClick() {
+    setLocalStorage(text);
+  }
 
-  const a = (text) => {
+  function onKeyDownEnter() {
+    if (window.event.keyCode === 13) {
+      setLocalStorage(text);
+    }
+  }
+
+  function setLocalStorage(text) {
+    const temp = JSON.parse(localStorage.getItem("key")) || [];
     const dateID = {
-      year: setValue.getFullYear(),
-      month: setValue.getMonth() + 1,
-      date: setValue.getDate(),
-      diff: localStorage.length,
+      createdYear: value.getFullYear(),
+      createdMonth: value.getMonth() + 1,
+      createdDate: value.getDate(),
+      text: text,
     };
-    localStorage.setItem(JSON.stringify(dateID), text);
-    dateID.text = text;
-    ToDos.push(dateID);
-    console.log(ToDos);
-  };
+
+    temp.push(dateID);
+    setToDos(temp);
+    setText("");
+  }
+
+  useEffect(() => {
+    localStorage.setItem("key", JSON.stringify(ToDos));
+  }, [ToDos]);
+
+  useEffect(() => {
+    setCount(
+      ToDos.filter(
+        (todo) =>
+          value.getFullYear() === todo.createdYear &&
+          value.getMonth() + 1 === todo.createdMonth &&
+          value.getDate() === todo.createdDate
+      ).length
+    );
+  }, [ToDos, value]);
 
   return (
     <Container>
+      <Header></Header>
       <Wrapper>
-        <Header>
-          <Today>
-            오늘은
-            <br />
-            {day.getFullYear()}년 {day.getMonth() + 1}월 {day.getDate()}일
-          </Today>
-        </Header>
-        <Calendar onChange={onChange} value={setValue} />
+        <Left>
+          <Calendar onChange={setValue} value={value} />
+          <Counter>
+            {count > 0 ? (
+              <Count>
+                {value.getFullYear()}년 {value.getMonth() + 1}월{" "}
+                {value.getDate()}일에는
+                <br />할 일이 {count}개 있어요!
+              </Count>
+            ) : (
+              <Count>
+                {value.getFullYear()}년 {value.getMonth() + 1}월{" "}
+                {value.getDate()}일에는
+                <br />할 일이 없어요!
+              </Count>
+            )}
+          </Counter>
+        </Left>
+        <Right>
+          <ToDo>
+            <WriteToDo
+              onChange={onChangeInput}
+              placeholder="할 일을 입력하세요"
+              value={text}
+              onKeyDown={onKeyDownEnter}
+            ></WriteToDo>
+            <ToDoBtn onClick={onClick}>등록</ToDoBtn>
+          </ToDo>
+          <List>
+            {ToDos.length > 0 ? (
+              ToDos.filter(
+                (todo) =>
+                  value.getFullYear() === todo.createdYear &&
+                  value.getMonth() + 1 === todo.createdMonth &&
+                  value.getDate() === todo.createdDate
+              ).map((todo, i) => <DailyToDo id={i}>{todo.text}</DailyToDo>)
+            ) : (
+              <></>
+            )}
+          </List>
+        </Right>
       </Wrapper>
-      <Frame>
-        <SelectDay>
-          {setValue.getFullYear()}년 {setValue.getMonth() + 1}월{" "}
-          {setValue.getDate()}일의 할 일 목록
-        </SelectDay>
-        <ToDo>
-          <WriteToDo
-            onChange={onChangeInput}
-            placeholder="할 일을 입력하세요"
-          ></WriteToDo>
-          <ToDoBtn onClick={onClick}>등록</ToDoBtn>
-        </ToDo>
-        <List></List>
-      </Frame>
     </Container>
   );
 }
 
 const Container = styled.div`
   width: 100%;
-  height: 800px;
+  height: 100%;
   background-color: #b8fcbf;
   display: flex;
-  justify-content: center;
-  flex-direction: row;
+  align-items: center;
+  flex-direction: column;
   gap: 50px;
 `;
 const Wrapper = styled.div`
-  width: 50%;
+  width: 1400px;
+  height: 563px;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  margin-bottom: 50px;
+`;
+const Left = styled.div`
+  width: 350px;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   flex-direction: column;
 `;
-const Header = styled.div`
-  width: 350px;
-`;
-const Today = styled.h4`
+const Counter = styled.div`
+  width: 100%;
+  height: 290px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   text-align: center;
 `;
-const Frame = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 50%;
+const Count = styled.p`
+  font-family: "Nanum Pen";
+  font-style: normal;
+  font-weight: 400;
+  font-size: 40px;
+  line-height: 62px;
 `;
-const SelectDay = styled.h1`
-  font-size: 25px;
-  width: fit-content;
+const Right = styled.div`
+  width: 1050px;
+  height: 100%;
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  flex-direction: column;
 `;
 const ToDo = styled.div`
   width: 335px;
@@ -113,4 +173,4 @@ const ToDoBtn = styled.button`
   border-radius: 10px;
 `;
 const List = styled.ul``;
-const ToDoList = styled.li``;
+const DailyToDo = styled.li``;
